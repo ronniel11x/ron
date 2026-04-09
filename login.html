@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sample Business</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Sample Business</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="company-insight.html">Company Insight</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="login.html" class="btn-login active">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-box">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form active" id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+                    <span class="error-message" id="login-email-error"></span>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+                    <span class="error-message" id="login-password-error"></span>
+                </div>
+                <div class="form-group remember-me">
+                    <label>
+                        <input type="checkbox" name="remember" id="login-remember"> Remember me
+                    </label>
+                    <a href="#" class="forgot-password" id="forgot-password-link">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn-submit" id="login-submit">Login</button>
+                <div class="form-footer">
+                    <p>Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+                </div>
+            </form>
+
+            <!-- Registration Form -->
+            <form class="auth-form" id="register-form">
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" name="name" placeholder="Enter your full name" required>
+                    <span class="error-message" id="register-name-error"></span>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
+                    <span class="error-message" id="register-email-error"></span>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" placeholder="Create a password" required>
+                    <span class="error-message" id="register-password-error"></span>
+                    <div class="password-strength" id="password-strength"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm">Confirm Password</label>
+                    <input type="password" id="register-confirm" name="confirm" placeholder="Confirm your password" required>
+                    <span class="error-message" id="register-confirm-error"></span>
+                </div>
+                <div class="form-group terms">
+                    <label>
+                        <input type="checkbox" name="terms" id="register-terms" required> I agree to the Terms & Conditions
+                    </label>
+                    <span class="error-message" id="register-terms-error"></span>
+                </div>
+                <button type="submit" class="btn-submit" id="register-submit">Register</button>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="#" id="switch-to-login">Login here</a></p>
+                </div>
+            </form>
+
+            <!-- Success Message -->
+            <div class="auth-success" id="auth-success" style="display: none;">
+                <div class="success-icon">✓</div>
+                <h3 id="success-title">Success!</h3>
+                <p id="success-message">Redirecting to dashboard...</p>
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const tabs = document.querySelectorAll('.auth-tab');
+        const forms = document.querySelectorAll('.auth-form');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const authSuccess = document.getElementById('auth-success');
+        const switchToRegister = document.getElementById('switch-to-register');
+        const switchToLogin = document.getElementById('switch-to-login');
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                switchTab(target);
+            });
+        });
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            tabs.forEach(t => t.classList.remove('active'));
+            forms.forEach(f => f.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-form`).classList.add('active');
+            
+            // Clear errors
+            clearAllErrors();
+        }
+
+        // Switch links
+        switchToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchTab('register');
+        });
+
+        switchToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchTab('login');
+        });
+
+        // Clear all errors
+        function clearAllErrors() {
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('input').forEach(el => el.classList.remove('input-error'));
+        }
+
+        // Show error
+        function showError(fieldId, message) {
+            const errorEl = document.getElementById(`${fieldId}-error`);
+            const inputEl = document.getElementById(fieldId);
+            if (errorEl) errorEl.textContent = message;
+            if (inputEl) inputEl.classList.add('input-error');
+        }
+
+        // Validate email
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/\d/)) strength++;
+            if (password.match(/[^a-zA-Z\d]/)) strength++;
+            return strength;
+        }
+
+        // Password strength indicator
+        const registerPassword = document.getElementById('register-password');
+        const passwordStrength = document.getElementById('password-strength');
+        
+        if (registerPassword) {
+            registerPassword.addEventListener('input', () => {
+                const strength = checkPasswordStrength(registerPassword.value);
+                const colors = ['#dc3545', '#ffc107', '#28a745', '#667eea'];
+                const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+                
+                if (registerPassword.value.length === 0) {
+                    passwordStrength.style.display = 'none';
+                } else {
+                    passwordStrength.style.display = 'block';
+                    passwordStrength.style.width = `${(strength / 4) * 100}%`;
+                    passwordStrength.style.background = colors[strength - 1] || colors[0];
+                    passwordStrength.title = labels[strength - 1] || labels[0];
+                }
+            });
+        }
+
+        // Login form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAllErrors();
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('login-remember').checked;
+            let hasError = false;
+
+            // Validate email
+            if (!email) {
+                showError('login-email', 'Email is required');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showError('login-email', 'Please enter a valid email');
+                hasError = true;
+            }
+
+            // Validate password
+            if (!password) {
+                showError('login-password', 'Password is required');
+                hasError = true;
+            } else if (password.length < 6) {
+                showError('login-password', 'Password must be at least 6 characters');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Simulate login API call
+            const submitBtn = document.getElementById('login-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Demo: Accept any valid email/password
+            if (isValidEmail(email) && password.length >= 6) {
+                showSuccess('Welcome back!', 'Redirecting to dashboard...');
+                
+                // Store session
+                if (remember) {
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userName', email.split('@')[0]);
+                } else {
+                    sessionStorage.setItem('userEmail', email);
+                    sessionStorage.setItem('userName', email.split('@')[0]);
+                }
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+                showError('login-email', 'Invalid email or password');
+            }
+        });
+
+        // Registration form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAllErrors();
+
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            const terms = document.getElementById('register-terms').checked;
+            let hasError = false;
+
+            // Validate name
+            if (!name || name.trim().length < 2) {
+                showError('register-name', 'Please enter your full name');
+                hasError = true;
+            }
+
+            // Validate email
+            if (!email) {
+                showError('register-email', 'Email is required');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showError('register-email', 'Please enter a valid email');
+                hasError = true;
+            }
+
+            // Validate password
+            if (!password) {
+                showError('register-password', 'Password is required');
+                hasError = true;
+            } else if (password.length < 8) {
+                showError('register-password', 'Password must be at least 8 characters');
+                hasError = true;
+            }
+
+            // Validate confirm password
+            if (!confirm) {
+                showError('register-confirm', 'Please confirm your password');
+                hasError = true;
+            } else if (password !== confirm) {
+                showError('register-confirm', 'Passwords do not match');
+                hasError = true;
+            }
+
+            // Validate terms
+            if (!terms) {
+                showError('register-terms', 'You must agree to the terms');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            // Simulate registration API call
+            const submitBtn = document.getElementById('register-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Demo: Successful registration
+            showSuccess('Account Created!', 'Redirecting to login...');
+            
+            // Clear form
+            registerForm.reset();
+            
+            // Switch to login after delay
+            setTimeout(() => {
+                switchTab('login');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }, 2000);
+        });
+
+        // Forgot password
+        document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = prompt('Please enter your email address:');
+            if (email && isValidEmail(email)) {
+                alert(`Password reset link has been sent to ${email}`);
+            } else if (email) {
+                alert('Please enter a valid email address');
+            }
+        });
+
+        // Show success message
+        function showSuccess(title, message) {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            document.querySelector('.auth-tabs').style.display = 'none';
+            
+            document.getElementById('success-title').textContent = title;
+            document.getElementById('success-message').textContent = message;
+            authSuccess.style.display = 'block';
+        }
+
+        // Check for existing session
+        window.addEventListener('load', () => {
+            const userEmail = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+            if (userEmail) {
+                // User is already logged in
+                console.log('User session found:', userEmail);
+            }
+        });
+    </script>
+</body>
+</html>
